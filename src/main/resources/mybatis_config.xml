@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+    PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<typeAlias type="com.hl.mybatis.dto.User" alias="User" />
+	</typeAliases>
+	
+	<!-- the second way to reference mapper.xml -->
+	<!-- <mappers>
+		<mapper resource="com/hl/mybatis/mapper/Usermapper.xml" />
+	</mappers> -->
+</configuration>

@@ -1,0 +1,191 @@
+<!-- <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hl.mybatis.dao.Userdao">
+
+	basic CRUD
+	<select id="findAll" resultType="User">
+		  <![CDATA[
+		  	select * from demo2.test_user
+		  ]]>
+	</select>
+
+	<select id="findById" resultType="User"
+		parameterType="java.lang.String">
+		<![CDATA[
+			select * from demo2.test_user where userid=#{userid}
+		]]>
+	</select>
+
+	<update id="updateById" parameterType="User">
+		<![CDATA[
+			update demo2.test_user set age =#{age} where userid = #{userid}
+		]]>
+	</update>
+
+	<insert id="add" parameterType="User">
+		<![CDATA[
+			insert into demo2.test_user (username, userid, age) values(#{username},#{userid},#{age})
+		]]>
+	</insert>
+
+	<delete id="deleteById" parameterType="java.lang.String">
+		<![CDATA[
+			delete from demo2.test_user where userid = #{userid}
+		]]>
+	</delete>
+
+
+	mybatis dynamic sql
+	<select id="findById2" resultType="User"
+		parameterType="User">
+		select * from demo2.test_user
+		<if test="userid != null">
+			where userid=#{userid}
+		</if>
+	</select>
+
+	<update id="updateById2" parameterType="User">
+		update demo2.test_user set age =#{age} where
+
+		<choose>
+			<when test="userid > 1">
+				userid > #{userid}
+			</when>
+			<otherwise>
+				userid >= #{userid}
+			</otherwise>
+		</choose>
+	</update>
+
+	<delete id="deleteById2" parameterType="User">
+		delete from demo2.test_user
+		<trim prefix="where" prefixOverrides="and | or">
+			and userid = #{userid}
+		</trim>
+	</delete>
+
+	<select id="findAll2" parameterType="User"
+		resultType="User">
+		select * from demo2.test_user
+		<where>
+			userid in
+			<foreach collection="usersid" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</select>
+
+
+	test resultMap
+	<select id="findAll3" resultMap="map">
+		  <![CDATA[
+		  	select * from demo2.test_user
+		  ]]>
+	</select>
+
+	<resultMap id="map" type="com.hl.mybatis.dto.User2">
+		<result column="username" property="username" />
+		<result column="userid" property="userid" />
+		<result column="age" property="age" />
+	</resultMap>
+
+
+	test primary key mapping of datebase supported auto increment
+	<insert id="addEmp" parameterType="com.hl.mybatis.dto.Emp"
+		keyProperty="empno" useGeneratedKeys="true">
+		insert into demo2.test_emp (name, age, hiredate, depart) values(#{name},#{age},#{hiredate},#{depart})
+	</insert>
+	
+	
+	retrieve emp information and employee's department information
+	test association mapping, nested query, one to one
+	<select id="findEmpById" resultMap= "departMap" parameterType="java.lang.String">
+		select * from demo2.test_emp where empno = #{empno}
+	</select>
+	<select id="findDepartById" parameterType="java.lang.String" resultType="com.hl.mybatis.dto.Depart">
+		select * from demo2.test_depart where departno = #{departno}
+	</select>
+	<resultMap id="departMap" type="com.hl.mybatis.dto.Emp">
+		<association property="dept" column="depart" select="findDepartById" javaType="com.hl.mybatis.dto.Depart">
+		</association>
+	</resultMap>
+	
+	test association mapping, nested result, one to one
+	<select id="findEmpById2" parameterType="java.lang.String" resultMap="departMap2">
+		select a.*, b.* from
+		demo2.test_emp a join demo2.test_depart b on a.depart = b.departno
+		where a.empno= #{empno}
+	</select>
+	<resultMap type="com.hl.mybatis.dto.Emp" id="departMap2">
+		<id property="empno" column="empno"></id>
+		<result property="name" column="name"></result>
+		<result property="age" column="age"></result>
+		<result property="hiredate" column="hiredate"></result>
+		<result property="depart" column="depart"></result>
+		
+		<association property="dept" column="departno" javaType="com.hl.mybatis.dto.Depart">
+			<id property="departno"	column="departno"></id>
+			<result property="departname" column="departname"/>
+		</association>
+	</resultMap>
+	
+	
+	retrieve department information and retrieve department all employees information
+	test collection mapping, nested result, one to many
+	<select id="findDepartById2" resultMap="resultMap3" parameterType="java.lang.String">
+		select d.*,e.* from demo2.test_depart d join demo2.test_emp e on
+		d.departno = e.depart where departno = #{departno}
+	</select>
+	<resultMap type="com.hl.mybatis.dto.Depart" id="resultMap3">
+		<id property="departno" column="departno"></id>
+		<result property="departname" column="departname"></result>
+		
+		<collection property="emps" column="departno" javaType="java.util.List" ofType="com.hl.mybatis.dto.Emp">
+			<id property="empno" column="empno"></id>
+			<result property="name" column="name"></result>
+			<result property="age" column="age"></result>
+			<result property="hiredate" column="hiredate"></result>
+			<result property="depart" column="depart"></result>
+			<result property="empno" column="empno"></result>
+		</collection>
+	</resultMap>
+	
+	test collection mapping, nested query, one to many
+	<select id="findDepartById4" resultMap="resultMap4">
+		select * from demo2.test_depart where departno =#{departno}
+	</select>
+	<select id="findEmpByDepart" parameterType="java.lang.String" resultType="com.hl.mybatis.dto.Emp">
+		select * from demo2.test_emp where depart = #{depart}
+	</select>
+	<resultMap id="resultMap4" type="com.hl.mybatis.dto.Depart">
+		<collection property="emps" javaType="java.util.ArrayList" column="departno" ofType="com.hl.mybatis.dto.Emp" select="findEmpByDepart">
+		</collection>
+	</resultMap>
+	
+	
+	Note: one to one and many to one very similar
+	retrieve employee information and employee's department information by depart in demo2.test_emp
+	test association mapping, nested result, many to one
+	<select id="retrieveEmpAndDepartInfo" resultMap="resultMap5">
+		select a.*, b.* from
+		demo2.test_emp a join demo2.test_depart b on a.depart = b.departno
+		where a.depart= #{depart}
+	</select>
+	<resultMap id="resultMap5" type="com.hl.mybatis.dto.Emp">
+		<id property="empno" column="empno"></id>
+		<result property="name" column="name"></result>
+		<result property="age" column="age"></result>
+		<result property="hiredate" column="hiredate"></result>
+		<result property="depart" column="depart"></result>
+		
+		<association property="dept" column="depart" javaType="com.hl.mybatis.dto.Depart">
+			<id property="departno"	column="departno"></id>
+			<result property="departname" column="departname"/>
+		</association>
+	</resultMap>	
+</mapper>
+ -->
